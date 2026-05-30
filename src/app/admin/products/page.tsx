@@ -1,39 +1,69 @@
-import Link from "next/link";
 import Image from "next/image";
-import { Plus, Trash2 } from "lucide-react";
 import { connectDB } from "@/db/mongoose";
 import { Product } from "@/db/models/Product";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
-import { deleteProduct, toggleAvailability } from "../_actions/products";
+import { PLACEHOLDER_PRODUCTS } from "@/lib/placeholder-products";
+import { DemoBanner } from "@/lib/placeholder-admin";
 
 export const dynamic = "force-dynamic";
 
-async function getAll() {
+type Row = {
+  _id: string;
+  name: string;
+  slug: string;
+  category: string;
+  imageUrl: string;
+  priceInCents: number;
+  isAvailable: boolean;
+};
+
+async function getAll(): Promise<{ rows: Row[]; isDemo: boolean }> {
   try {
     await connectDB();
-    return await Product.find().sort({ createdAt: -1 }).lean();
+    const list = await Product.find().sort({ createdAt: -1 }).lean();
+    if (list.length === 0) {
+      return {
+        rows: PLACEHOLDER_PRODUCTS.map((p) => ({ ...p, isAvailable: true })),
+        isDemo: true,
+      };
+    }
+    return {
+      rows: list.map((p) => ({
+        _id: String(p._id),
+        name: p.name,
+        slug: p.slug,
+        category: p.category,
+        imageUrl: p.imageUrl,
+        priceInCents: p.priceInCents,
+        isAvailable: p.isAvailable,
+      })),
+      isDemo: false,
+    };
   } catch {
-    return [];
+    return {
+      rows: PLACEHOLDER_PRODUCTS.map((p) => ({ ...p, isAvailable: true })),
+      isDemo: true,
+    };
   }
 }
 
 export default async function AdminProducts() {
-  const products = await getAll();
+  const { rows, isDemo } = await getAll();
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Products</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{products.length} total</p>
-        </div>
-        <Button asChild>
-          <Link href="/admin/products/new"><Plus className="h-4 w-4" /> New product</Link>
-        </Button>
+      <div>
+        <h1 className="text-2xl font-semibold">Catalogue</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {rows.length} pieces · edit in <code className="rounded bg-muted px-1.5 py-0.5 text-xs">scripts/seed.ts</code> and re-run <code className="rounded bg-muted px-1.5 py-0.5 text-xs">npm run seed</code>.
+        </p>
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-xl border">
+      <div className="mt-6">
+        {isDemo && <DemoBanner />}
+      </div>
+
+      <div className="mt-2 overflow-hidden rounded-xl border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -41,18 +71,17 @@ export default async function AdminProducts() {
               <th className="px-4 py-3 text-left">Category</th>
               <th className="px-4 py-3 text-left">Price</th>
               <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y">
-            {products.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">No products yet.</td></tr>
-            ) : products.map((p) => (
-              <tr key={String(p._id)}>
+            {rows.map((p) => (
+              <tr key={p._id}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted">
-                      {p.imageUrl && <Image src={p.imageUrl} alt={p.name} fill className="object-cover" sizes="40px" />}
+                      {p.imageUrl && (
+                        <Image src={p.imageUrl} alt={p.name} fill className="object-cover" sizes="40px" />
+                      )}
                     </div>
                     <div>
                       <div className="font-medium">{p.name}</div>
@@ -63,22 +92,9 @@ export default async function AdminProducts() {
                 <td className="px-4 py-3 text-muted-foreground">{p.category}</td>
                 <td className="px-4 py-3">{formatPrice(p.priceInCents)}</td>
                 <td className="px-4 py-3">
-                  <form action={toggleAvailability}>
-                    <input type="hidden" name="id" value={String(p._id)} />
-                    <button type="submit">
-                      <Badge variant={p.isAvailable ? "default" : "outline"}>
-                        {p.isAvailable ? "Active" : "Hidden"}
-                      </Badge>
-                    </button>
-                  </form>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <form action={deleteProduct} className="inline">
-                    <input type="hidden" name="id" value={String(p._id)} />
-                    <Button type="submit" variant="ghost" size="icon" aria-label="Delete">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </form>
+                  <Badge variant={p.isAvailable ? "default" : "outline"}>
+                    {p.isAvailable ? "Active" : "Hidden"}
+                  </Badge>
                 </td>
               </tr>
             ))}
