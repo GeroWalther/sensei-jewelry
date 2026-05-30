@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed.ts",
+    "hash-admin": "tsx scripts/hash-admin-password.ts",
     "email": "email dev --dir src/email --port 3002"
   },
   "dependencies": {

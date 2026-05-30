@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Minus, Plus, Trash2, Loader2 } from "lucide-react";
+import { Minus, Plus, Trash2, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ export default function CartPage() {
   if (!hasHydrated) {
     return (
       <div className="container-narrow py-20 text-center">
-        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+        <LoaderCircle className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -127,7 +127,7 @@ export default function CartPage() {
             <span>{formatPrice(subtotal)}</span>
           </div>
           <Button size="lg" className="mt-6 w-full" onClick={handleCheckout} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Checkout"}
+            {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : "Checkout"}
           </Button>
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Secure checkout powered by Stripe

@@ -15,8 +15,9 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Sensei Shop — Essentials, refined.",
-  description: "Carefully curated essentials. Made to last, designed for the everyday.",
+  title: "Sensei — Fine jewellery, made slowly.",
+  description:
+    "Recycled gold and traceable stones, shaped by hand in our Lisbon studio. Designed for every day, built to last several.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
