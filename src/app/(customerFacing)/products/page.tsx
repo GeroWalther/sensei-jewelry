@@ -39,9 +39,9 @@ async function getAll(category?: string) {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { category?: string };
+  searchParams: Promise<{ category?: string }>;
 }) {
-  const category = searchParams.category;
+  const { category } = await searchParams;
   const fromDb = await getAll(category);
   const products =
     fromDb.length > 0

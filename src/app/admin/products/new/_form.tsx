@@ -1,5 +1,6 @@
 "use client";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,16 +17,16 @@ function Submit() {
 }
 
 export function NewProductForm() {
-  const [state, action] = useFormState(createProduct, { error: undefined } as { error?: string });
+  const [state, action] = useActionState(createProduct, { error: undefined } as { error?: string });
   return (
     <form action={action} className="space-y-5">
       <div className="grid gap-2">
         <Label htmlFor="name">Name</Label>
-        <Input id="name" name="name" required placeholder="Linen Throw" />
+        <Input id="name" name="name" required placeholder="Aria Hoop — Gold" />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="slug">Slug</Label>
-        <Input id="slug" name="slug" required placeholder="linen-throw" pattern="[a-z0-9-]+" />
+        <Input id="slug" name="slug" required placeholder="aria-hoop-gold" pattern="[a-z0-9-]+" />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="description">Description</Label>
@@ -34,11 +35,11 @@ export function NewProductForm() {
       <div className="grid gap-5 md:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="priceInCents">Price (in cents)</Label>
-          <Input id="priceInCents" name="priceInCents" type="number" required min={1} placeholder="4900" />
+          <Input id="priceInCents" name="priceInCents" type="number" required min={1} placeholder="12800" />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="category">Category</Label>
-          <Input id="category" name="category" defaultValue="general" />
+          <Input id="category" name="category" defaultValue="rings" />
         </div>
       </div>
       <div className="grid gap-2">

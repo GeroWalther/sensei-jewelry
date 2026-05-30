@@ -44,8 +44,9 @@ async function loadProduct(slug: string): Promise<ProductView | null> {
   return null;
 }
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await loadProduct(params.slug);
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await loadProduct(slug);
   if (!product) notFound();
 
   return (
