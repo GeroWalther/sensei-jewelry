@@ -5,12 +5,47 @@ import { Product } from "@/db/models/Product";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { AddToCartButton } from "../../_components/add-to-cart-button";
+import { findPlaceholder, type PlaceholderProduct } from "@/lib/placeholder-products";
 
 export const revalidate = 60;
 
+type ProductView = {
+  _id: string;
+  slug: string;
+  name: string;
+  description: string;
+  priceInCents: number;
+  category: string;
+  imageUrl: string;
+  isPlaceholder: boolean;
+};
+
+async function loadProduct(slug: string): Promise<ProductView | null> {
+  try {
+    await connectDB();
+    const p = await Product.findOne({ slug, isAvailable: true }).lean();
+    if (p) {
+      return {
+        _id: String(p._id),
+        slug: p.slug,
+        name: p.name,
+        description: p.description,
+        priceInCents: p.priceInCents,
+        category: p.category,
+        imageUrl: p.imageUrl,
+        isPlaceholder: false,
+      };
+    }
+  } catch {
+    // Mongo unreachable — fall through to placeholder fallback below.
+  }
+  const ph: PlaceholderProduct | undefined = findPlaceholder(slug);
+  if (ph) return { ...ph, isPlaceholder: true };
+  return null;
+}
+
 export default async function ProductPage({ params }: { params: { slug: string } }) {
-  await connectDB();
-  const product = await Product.findOne({ slug: params.slug, isAvailable: true }).lean();
+  const product = await loadProduct(params.slug);
   if (!product) notFound();
 
   return (
@@ -34,18 +69,26 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <p className="whitespace-pre-line text-base leading-relaxed text-muted-foreground">
           {product.description}
         </p>
-        <AddToCartButton
-          product={{
-            productId: String(product._id),
-            slug: product.slug,
-            name: product.name,
-            priceInCents: product.priceInCents,
-            imageUrl: product.imageUrl,
-          }}
-        />
+        {product.isPlaceholder ? (
+          <div className="rounded-md border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Demo product.</span>{" "}
+            Connect MongoDB and run <code className="rounded bg-background px-1.5 py-0.5 text-xs">npm run seed</code> to make this purchasable.
+          </div>
+        ) : (
+          <AddToCartButton
+            product={{
+              productId: product._id,
+              slug: product.slug,
+              name: product.name,
+              priceInCents: product.priceInCents,
+              imageUrl: product.imageUrl,
+            }}
+          />
+        )}
         <div className="space-y-3 border-t pt-6 text-sm text-muted-foreground">
-          <p><span className="font-medium text-foreground">Free shipping</span> on orders over $75.</p>
-          <p><span className="font-medium text-foreground">30-day returns</span> on all unused items.</p>
+          <p><span className="font-medium text-foreground">Free shipping</span> on orders over €150.</p>
+          <p><span className="font-medium text-foreground">Lifetime care</span> — free cleaning, free re-plating after five years.</p>
+          <p><span className="font-medium text-foreground">60-day returns</span> on all unworn pieces.</p>
         </div>
       </div>
     </div>

@@ -91,7 +91,7 @@ async function getFeatured() {
 
 export default async function HomePage() {
   const fromDb = await getFeatured();
-  const featured = fromDb.length > 0 ? fromDb : PLACEHOLDER_PRODUCTS;
+  const featured = fromDb.length > 0 ? fromDb : PLACEHOLDER_PRODUCTS.slice(0, 4);
   const isPlaceholder = fromDb.length === 0;
 
   return (
