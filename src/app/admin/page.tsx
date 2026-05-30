@@ -1,47 +1,8 @@
-import { connectDB } from "@/db/mongoose";
-import { Product } from "@/db/models/Product";
-import { Order } from "@/db/models/Order";
-import { Customer } from "@/db/models/Customer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
 import { DEMO_STATS, DemoBanner } from "@/lib/placeholder-admin";
 
-export const dynamic = "force-dynamic";
-
-type Stats = {
-  productCount: number;
-  customerCount: number;
-  orderCount: number;
-  revenueInCents: number;
-  isDemo: boolean;
-};
-
-async function getStats(): Promise<Stats> {
-  try {
-    await connectDB();
-    const [productCount, customerCount, paidOrders] = await Promise.all([
-      Product.countDocuments(),
-      Customer.countDocuments(),
-      Order.find({ status: "paid" }).select("totalInCents").lean(),
-    ]);
-    const revenueInCents = paidOrders.reduce((s, o) => s + o.totalInCents, 0);
-    if (productCount === 0 && customerCount === 0 && paidOrders.length === 0) {
-      return { ...DEMO_STATS, isDemo: true };
-    }
-    return {
-      productCount,
-      customerCount,
-      orderCount: paidOrders.length,
-      revenueInCents,
-      isDemo: false,
-    };
-  } catch {
-    return { ...DEMO_STATS, isDemo: true };
-  }
-}
-
-export default async function AdminDashboard() {
-  const stats = await getStats();
+export default function AdminDashboard() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Dashboard</h1>
@@ -51,38 +12,36 @@ export default async function AdminDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Revenue</CardDescription>
-            <CardTitle className="text-2xl">{formatPrice(stats.revenueInCents)}</CardTitle>
+            <CardTitle className="text-2xl">{formatPrice(DEMO_STATS.revenueInCents)}</CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">From paid orders</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Paid orders</CardDescription>
-            <CardTitle className="text-2xl">{stats.orderCount}</CardTitle>
+            <CardTitle className="text-2xl">{DEMO_STATS.orderCount}</CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">Lifetime</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Products</CardDescription>
-            <CardTitle className="text-2xl">{stats.productCount}</CardTitle>
+            <CardTitle className="text-2xl">{DEMO_STATS.productCount}</CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">In catalogue</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Customers</CardDescription>
-            <CardTitle className="text-2xl">{stats.customerCount}</CardTitle>
+            <CardTitle className="text-2xl">{DEMO_STATS.customerCount}</CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">Unique emails</CardContent>
         </Card>
       </div>
 
-      {stats.isDemo && (
-        <div className="mt-8">
-          <DemoBanner />
-        </div>
-      )}
+      <div className="mt-8">
+        <DemoBanner />
+      </div>
     </div>
   );
 }

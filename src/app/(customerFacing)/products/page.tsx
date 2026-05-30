@@ -1,11 +1,7 @@
 import Link from "next/link";
-import { connectDB } from "@/db/mongoose";
-import { Product } from "@/db/models/Product";
 import { ProductCard } from "../_components/product-card";
 import { PLACEHOLDER_PRODUCTS } from "@/lib/placeholder-products";
 import { cn } from "@/lib/utils";
-
-export const revalidate = 60;
 
 export const metadata = { title: "Shop — Sensei" };
 
@@ -17,37 +13,15 @@ const CATEGORIES = [
   { slug: "bracelets", label: "Bracelets" },
 ];
 
-async function getAll(category?: string) {
-  try {
-    await connectDB();
-    const query: Record<string, unknown> = { isAvailable: true };
-    if (category) query.category = category;
-    const result = await Product.find(query).sort({ createdAt: -1 }).lean();
-    return result.map((p) => ({
-      _id: String(p._id),
-      slug: p.slug,
-      name: p.name,
-      priceInCents: p.priceInCents,
-      imageUrl: p.imageUrl,
-      category: p.category,
-    }));
-  } catch {
-    return [];
-  }
-}
-
 export default async function ProductsPage({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const fromDb = await getAll(category);
-  const products =
-    fromDb.length > 0
-      ? fromDb
-      : PLACEHOLDER_PRODUCTS.filter((p) => !category || p.category === category);
-  const isPlaceholder = fromDb.length === 0;
+  const products = category
+    ? PLACEHOLDER_PRODUCTS.filter((p) => p.category === category)
+    : PLACEHOLDER_PRODUCTS;
 
   return (
     <div className="container-narrow py-12 md:py-16">
@@ -86,30 +60,21 @@ export default async function ProductsPage({
 
       {products.length === 0 ? (
         <div className="rounded-xl border bg-muted/30 p-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            Nothing here yet in this category.
-          </p>
+          <p className="text-sm text-muted-foreground">Nothing here yet in this category.</p>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((p) => (
-              <ProductCard
-                key={String(p._id)}
-                slug={p.slug}
-                name={p.name}
-                priceInCents={p.priceInCents}
-                imageUrl={p.imageUrl}
-                category={p.category}
-              />
-            ))}
-          </div>
-          {isPlaceholder && (
-            <p className="mt-12 text-center text-xs text-muted-foreground">
-              Showing placeholder pieces. Run <code className="rounded bg-muted px-1.5 py-0.5">npm run seed</code> once MongoDB is connected to load the full catalogue.
-            </p>
-          )}
-        </>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-12 md:grid-cols-3 lg:grid-cols-4">
+          {products.map((p) => (
+            <ProductCard
+              key={p._id}
+              slug={p.slug}
+              name={p.name}
+              priceInCents={p.priceInCents}
+              imageUrl={p.imageUrl}
+              category={p.category}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

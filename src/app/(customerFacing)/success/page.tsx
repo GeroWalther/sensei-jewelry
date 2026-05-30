@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
-import { stripe } from "@/lib/stripe";
+import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
 import { ClearCartOnMount } from "./_clear-cart";
 
@@ -13,9 +13,9 @@ export default async function SuccessPage({
 }) {
   const { session_id: sessionId } = await searchParams;
   let customerEmail: string | null = null;
-  if (sessionId) {
+  if (sessionId && isStripeConfigured()) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      const session = await getStripe().checkout.sessions.retrieve(sessionId);
       customerEmail = session.customer_details?.email ?? null;
     } catch {
       customerEmail = null;

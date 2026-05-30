@@ -1,14 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Leaf, Hammer, Recycle } from "lucide-react";
-import { connectDB } from "@/db/mongoose";
-import { Product } from "@/db/models/Product";
 import { Button } from "@/components/ui/button";
 import { HeroImageSwap } from "@/components/site/hero-image-swap";
 import { ProductCard } from "./_components/product-card";
 import { PLACEHOLDER_PRODUCTS } from "@/lib/placeholder-products";
-
-export const revalidate = 60;
 
 const HERO_PRIMARY =
   "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1400&q=85";
@@ -69,30 +65,8 @@ const JOURNAL = [
   },
 ];
 
-async function getFeatured() {
-  try {
-    await connectDB();
-    const result = await Product.find({ isAvailable: true })
-      .sort({ createdAt: -1 })
-      .limit(4)
-      .lean();
-    return result.map((p) => ({
-      _id: String(p._id),
-      slug: p.slug,
-      name: p.name,
-      priceInCents: p.priceInCents,
-      imageUrl: p.imageUrl,
-      category: p.category,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-export default async function HomePage() {
-  const fromDb = await getFeatured();
-  const featured = fromDb.length > 0 ? fromDb : PLACEHOLDER_PRODUCTS.slice(0, 4);
-  const isPlaceholder = fromDb.length === 0;
+export default function HomePage() {
+  const featured = PLACEHOLDER_PRODUCTS.slice(0, 4);
 
   return (
     <>
@@ -177,7 +151,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
           {featured.map((p) => (
             <ProductCard
-              key={String(p._id)}
+              key={p._id}
               slug={p.slug}
               name={p.name}
               priceInCents={p.priceInCents}
@@ -186,11 +160,6 @@ export default async function HomePage() {
             />
           ))}
         </div>
-        {isPlaceholder && (
-          <p className="mt-8 text-center text-xs text-muted-foreground">
-            Showing placeholder products. Run <code className="rounded bg-muted px-1.5 py-0.5">npm run seed</code> after connecting MongoDB to load the full catalogue.
-          </p>
-        )}
       </section>
 
       {/* Editorial / story */}
